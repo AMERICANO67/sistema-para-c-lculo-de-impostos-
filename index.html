@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta
+    name="description"
+    content="Dashboard para cálculo de ICMS com restituição e sem restituição."
+  >
+  <title>Dashboard de Cálculo de ICMS</title>
+  <link
+    rel="icon"
+    type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231677ff'/%3E%3Ctext x='32' y='40' font-family='Arial,Segoe UI,sans-serif' font-size='28' font-weight='700' text-anchor='middle' fill='white'%3EDF%3C/text%3E%3C/svg%3E"
+  >
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">DF</div>
+        <div>
+          <div class="brand-name">Dashboard de ICMS</div>
+          <div class="brand-sub">Simulação comparativa com restituição e sem restituição</div>
+        </div>
+      </div>
+
+      <div class="topbar-copy">
+        <span>Margem sobre custo: percentual aplicado sobre o custo de compra.</span>
+        <strong>Margem líquida sobre a venda: percentual de lucro dentro do preço final.</strong>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="control-panel">
+        <div class="section-title">
+          <div>
+            <span class="section-kicker">PARÂMETROS DA SIMULAÇÃO</span>
+            <h1>Cálculo de venda com <span>ICMS restituído</span> e sem restituição</h1>
+            <p>
+              Informe o custo de compra, a margem desejada e as alíquotas para comparar os dois cenários.
+            </p>
+          </div>
+
+          <button id="resetBtn" class="btn-secondary" type="button">Restaurar exemplo</button>
+        </div>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Tipo de cálculo</span>
+            <div class="select-wrap">
+              <select id="calcModeSelect">
+                <option value="markup" selected>Margem sobre custo</option>
+                <option value="net">Margem líquida sobre venda</option>
+              </select>
+            </div>
+          </label>
+
+          <label class="field">
+            <span>Valor de compra (R$)</span>
+            <div class="input-wrap">
+              <span>R$</span>
+              <input id="purchaseInput" type="number" min="0" step="0.01" value="100">
+            </div>
+          </label>
+
+          <label class="field">
+            <span id="marginFieldLabel">Margem sobre custo desejada</span>
+            <div class="select-wrap">
+              <select id="marginSelect"></select>
+            </div>
+          </label>
+
+          <label class="field">
+            <span>ICMS com restituição (%)</span>
+            <div class="input-wrap">
+              <input id="restitutionTaxInput" type="number" min="0" max="100" step="0.01" value="18">
+              <span>%</span>
+            </div>
+          </label>
+
+          <label class="field">
+            <span>ICMS na saída (%)</span>
+            <div class="input-wrap">
+              <input id="exitTaxInput" type="number" min="0" max="100" step="0.01" value="18">
+              <span>%</span>
+            </div>
+          </label>
+        </div>
+
+        <p class="mode-helper" id="modeHelperText">
+          Regra ativa: margem sobre custo. Exemplo: compra de R$ 100,00 com 60% gera R$ 160,00 após cobrir o ICMS na saída no cenário com restituição de 18%.
+        </p>
+      </section>
+
+      <section class="kpi-grid">
+        <article class="kpi-card blue">
+          <span>Preço com restituição</span>
+          <strong id="kpiWithRestitution">R$ 0,00</strong>
+        </article>
+
+        <article class="kpi-card orange">
+          <span>Preço sem restituição</span>
+          <strong id="kpiWithoutRestitution">R$ 0,00</strong>
+        </article>
+
+        <article class="kpi-card green">
+          <span>Diferença entre cenários</span>
+          <strong id="kpiDifference">R$ 0,00</strong>
+        </article>
+
+        <article class="kpi-card purple">
+          <span id="kpiMarginLabel">Margem sobre custo</span>
+          <strong id="kpiMargin">0,0%</strong>
+        </article>
+      </section>
+
+      <section class="comparison-grid">
+        <article class="scenario-box">
+          <div class="scenario-header-bar blue">
+            <div class="scenario-header-title">
+              <span class="scenario-badge-icon">1</span>
+              <span>CENÁRIO 01 - COM RESTITUIÇÃO</span>
+            </div>
+            <span class="scenario-header-pill" id="pillScenario1">18% restituído + 18% de ICMS na saída</span>
+          </div>
+
+          <div class="scenario-body">
+            <div class="price-main">
+              <div>
+                <span>Preço de venda necessário</span>
+                <strong class="blue-text" id="saleWithRestitution">R$ 0,00</strong>
+                <small id="scenarioWithCaption">para atingir a margem escolhida</small>
+              </div>
+
+              <div class="formula-box">
+                <strong>Fórmula</strong>
+                <code id="formulaWith">Venda = Compra x (1 - Restituição) x (1 + Margem) ÷ (1 - ICMS)</code>
+              </div>
+            </div>
+
+            <div class="metric-table">
+              <div class="metric-row"><span>Compra</span><strong id="buyWithRestitution">R$ 0,00</strong></div>
+              <div class="metric-row"><span>Restituição estimada</span><strong id="restitutionValue">R$ 0,00</strong></div>
+              <div class="metric-row"><span>Custo efetivo</span><strong id="effectiveCost">R$ 0,00</strong></div>
+              <div class="metric-row"><span>ICMS na saída</span><strong id="outputTaxWith">R$ 0,00</strong></div>
+              <div class="metric-row"><span>ICMS líquido</span><strong id="taxDueWith">R$ 0,00</strong></div>
+              <div class="metric-row highlight"><span>Lucro na margem</span><strong id="profitWith">R$ 0,00</strong></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="scenario-box">
+          <div class="scenario-header-bar red">
+            <div class="scenario-header-title">
+              <span class="scenario-badge-icon">2</span>
+              <span>CENÁRIO 02 - SEM RESTITUIÇÃO</span>
+            </div>
+            <span class="scenario-header-pill" id="pillScenario2">Sem restituição + 18% de ICMS na saída</span>
+          </div>
+
+          <div class="scenario-body">
+            <div class="price-main">
+              <div>
+                <span>Preço de venda necessário</span>
+                <strong class="red-text" id="saleWithoutRestitution">R$ 0,00</strong>
+                <small id="scenarioWithoutCaption">para atingir a margem escolhida</small>
+              </div>
+
+              <div class="formula-box">
+                <strong>Fórmula</strong>
+                <code id="formulaWithout">Venda = Compra x (1 + Margem) ÷ (1 - ICMS)</code>
+              </div>
+            </div>
+
+            <div class="metric-table">
+              <div class="metric-row"><span>Compra</span><strong id="buyWithoutRestitution">R$ 0,00</strong></div>
+              <div class="metric-row"><span>Restituição</span><strong id="noRestitutionValue">R$ 0,00</strong></div>
+              <div class="metric-row"><span>Custo efetivo</span><strong id="effectiveCostNoRestitution">R$ 0,00</strong></div>
+              <div class="metric-row"><span>ICMS na saída</span><strong id="outputTaxWithout">R$ 0,00</strong></div>
+              <div class="metric-row"><span>ICMS líquido</span><strong id="taxDueWithout">R$ 0,00</strong></div>
+              <div class="metric-row highlight"><span>Lucro na margem</span><strong id="profitWithout">R$ 0,00</strong></div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="analysis-grid">
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>VISÃO COMPARATIVA</h2>
+              <div class="sub-note">Impacto da restituição no preço de venda</div>
+            </div>
+          </div>
+
+          <div class="chart-box-wrapper">
+            <div class="y-axis-title-col">Preço de venda (R$)</div>
+
+            <div class="chart-main-area">
+              <div class="chart-plot-frame">
+                <div class="y-ticks-col">
+                  <span id="tick0">0</span>
+                  <span id="tick1">50</span>
+                  <span id="tick2">100</span>
+                  <span id="tick3">150</span>
+                  <span id="tick4">200</span>
+                  <span id="tick5">250</span>
+                </div>
+
+                <div class="grid-lines-bg">
+                  <i class="grid-line"></i>
+                  <i class="grid-line"></i>
+                  <i class="grid-line"></i>
+                  <i class="grid-line"></i>
+                  <i class="grid-line"></i>
+                  <i class="grid-line"></i>
+                </div>
+
+                <div class="bars-container">
+                  <div class="bar-column">
+                    <div class="bar-value-top" id="chartValWith">R$ 0,00</div>
+                    <div class="bar-shape blue" id="chartBarWith"></div>
+                  </div>
+
+                  <div class="bar-column">
+                    <div class="bar-value-top" id="chartValWithout">R$ 0,00</div>
+                    <div class="bar-shape orange" id="chartBarWithout"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="x-axis-labels-row">
+                <span>Com restituição</span>
+                <span>Sem restituição</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-legend-bottom">
+            <span><i class="legend-circle blue"></i> Com restituição</span>
+            <span><i class="legend-circle orange"></i> Sem restituição</span>
+          </div>
+        </article>
+
+        <article class="panel table-panel-container">
+          <div class="panel-head">
+            <div>
+              <h2>TABELA DE REFERÊNCIA</h2>
+              <div class="sub-note" id="tableSubtitle">Coeficientes para margem sobre custo</div>
+            </div>
+
+            <button class="btn-toggle-eye" id="toggleTableBtn" type="button">
+              <span id="toggleText">Ocultar</span>
+            </button>
+          </div>
+
+          <div class="table-scroll" id="tableContainer">
+            <table class="ref-table">
+              <thead>
+                <tr>
+                  <th>Margem</th>
+                  <th>Coef. c/ restituição</th>
+                  <th>Venda c/ restituição</th>
+                  <th>Coef. s/ restituição</th>
+                  <th>Venda s/ restituição</th>
+                </tr>
+              </thead>
+              <tbody id="referenceTable"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>LEITURA EXECUTIVA</h2>
+              <div class="sub-note">Resumo para decisão rápida</div>
+            </div>
+          </div>
+
+          <div class="executive-card">
+            <span>Economia potencial no preço de venda</span>
+            <strong id="insightDifference">R$ 0,00</strong>
+          </div>
+
+          <ul class="insight-bullets">
+            <li>
+              <strong>Com restituição:</strong>
+              <span id="insightWith">O custo efetivo reduz e o preço necessário cai.</span>
+            </li>
+            <li>
+              <strong>Sem restituição:</strong>
+              <span id="insightWithout">O custo integral pressiona o preço de venda.</span>
+            </li>
+            <li>
+              <strong>Atenção:</strong>
+              <span>Esta simulação é operacional e deve ser validada com a contabilidade antes de uso fiscal.</span>
+            </li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="disclaimer">
+        <strong>Nota:</strong> esta versão considera a restituição como um percentual recuperável sobre o custo de compra, seguindo a lógica comparativa do modelo enviado. Se você quiser, no próximo passo eu adapto para a regra fiscal exata da sua operação.
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-content">
+        <span>@2026 todos os direitos reservados</span>
+        <span class="footer-separator">-</span>
+        <span>F.X.C - Sistemas de Integração Inteligentes</span>
+        <span class="footer-separator">-</span>
+        <span>v.1.0</span>
+        <span class="footer-separator">|</span>
+        <span class="footer-contact">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6.6 3.5 9.1 3l2 4.8-2.1 1.7a15 15 0 0 0 5.5 5.5l1.7-2.1 4.8 2-.5 2.5c-.3 1.4-1.6 2.3-3 2.1C10.5 18.5 5.5 13.5 4.5 6.5c-.2-1.4.7-2.7 2.1-3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          </svg>
+          contato: (16) 99223-2770
+        </span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="./script.js"></script>
+</body>
+</html>
