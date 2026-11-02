@@ -44,26 +44,35 @@ function populateMargins() {
 function getModeConfig(mode) {
   if (mode === "net") {
     return {
-      label: "margem líquida sobre venda",
-      formulaWith: "Venda = Compra x (1 - Restituição) ÷ (1 - ICMS - Margem)",
+      label: "margem líquida dentro da venda",
+      formulaWith: "Venda = Compra x (1 - Credito) ÷ (1 - ICMS - Margem)",
       formulaWithout: "Venda = Compra ÷ (1 - ICMS - Margem)",
       helperText:
-        "Regra ativa: margem líquida sobre venda. Nesta leitura, 60% significa que o lucro precisa representar 60% do preço final, por isso o valor de venda cresce bastante.",
-      tableSubtitle: "Coeficientes para margem líquida sobre venda",
-      scenarioCaption: "para atingir a margem líquida escolhida",
+        "Regra ativa: margem líquida dentro da venda. Nesta leitura, 60% significa que o lucro precisa ficar dentro do preço final depois do ICMS, por isso o valor de venda cresce bastante.",
+      tableSubtitle: "Coeficientes para margem líquida dentro da venda",
+      scenarioCaption: "para atingir a margem líquida definida dentro da venda",
       kpiLabel: "Margem líquida",
+      warningTitle: "Atenção: margem líquida dentro da venda eleva bastante o preço",
+      warningText:
+        "Exemplo curto: compra de R$ 100,00 com 18% de crédito gera custo efetivo de R$ 82,00. Se você exigir 60% de margem líquida e ainda pagar 18% de ICMS na saída, sobram só 22% do preço para cobrir esse custo. Por isso a venda vai para R$ 372,73.",
+      recommendation:
+        "Use esta leitura apenas quando você realmente quiser controlar lucro líquido dentro do preço final. Para precificação comercial do dia a dia, a margem sobre custo costuma ser mais aderente.",
     };
   }
 
   return {
     label: "margem sobre custo",
-    formulaWith: "Venda = Compra x (1 - Restituição) x (1 + Margem) ÷ (1 - ICMS)",
+    formulaWith: "Venda = Compra x (1 - Credito) x (1 + Margem) ÷ (1 - ICMS)",
     formulaWithout: "Venda = Compra x (1 + Margem) ÷ (1 - ICMS)",
     helperText:
-      "Regra ativa: margem sobre custo. Exemplo: compra de R$ 100,00 com 60% gera R$ 160,00 após cobrir o ICMS na saída no cenário com restituição de 18%.",
+      "Regra ativa: margem comercial sobre custo. Exemplo: compra de R$ 100,00 com 18% de crédito e margem de 60% gera venda de R$ 160,00 após cobrir o ICMS na saída.",
     tableSubtitle: "Coeficientes para margem sobre custo",
-    scenarioCaption: "para atingir o acréscimo desejado sobre o custo",
-    kpiLabel: "Margem sobre custo",
+    scenarioCaption: "para atingir o acréscimo comercial desejado sobre o custo",
+    kpiLabel: "Margem comercial",
+    warningTitle: "",
+    warningText: "",
+    recommendation:
+      "Para operações internas em SP, fora de ICMS-ST e com crédito normal na entrada, esta é a leitura mais aderente para precificação comercial da empresa.",
   };
 }
 
@@ -71,7 +80,9 @@ function updateModeUI(mode) {
   const config = getModeConfig(mode);
 
   $("marginFieldLabel").textContent =
-    mode === "net" ? "Margem líquida desejada" : "Margem sobre custo desejada";
+    mode === "net" ? "Margem líquida desejada na venda" : "Margem comercial desejada sobre custo";
+  $("entryTaxFieldLabel").textContent =
+    mode === "net" ? "Crédito de ICMS na entrada (%)" : "Crédito de ICMS na entrada (%)";
   $("kpiMarginLabel").textContent = config.kpiLabel;
   $("modeHelperText").textContent = config.helperText;
   $("formulaWith").textContent = config.formulaWith;
@@ -79,6 +90,19 @@ function updateModeUI(mode) {
   $("tableSubtitle").textContent = config.tableSubtitle;
   $("scenarioWithCaption").textContent = config.scenarioCaption;
   $("scenarioWithoutCaption").textContent = config.scenarioCaption;
+  $("taxRecommendation").textContent = config.recommendation;
+
+  const warningBox = $("netModeWarning");
+  const warningText = $("netModeWarningText");
+  if (mode === "net") {
+    warningBox.classList.remove("is-hidden");
+    $("netModeWarningTitle").textContent = config.warningTitle;
+    warningText.textContent = config.warningText;
+  } else {
+    warningBox.classList.add("is-hidden");
+    $("netModeWarningTitle").textContent = "Atenção para margem líquida dentro da venda";
+    warningText.textContent = "";
+  }
 }
 
 function updateTicks(maxScale) {
@@ -243,9 +267,9 @@ function calculate() {
   const difference = saleWithout - saleWith;
 
   $("pillScenario1").textContent =
-    `${(restitutionTax * 100).toFixed(2).replace(".", ",")}% restituído + ${(exitTax * 100).toFixed(2).replace(".", ",")}% de ICMS na saída`;
+    `${(restitutionTax * 100).toFixed(2).replace(".", ",")}% de crédito na entrada + ${(exitTax * 100).toFixed(2).replace(".", ",")}% de ICMS na saída`;
   $("pillScenario2").textContent =
-    `Sem restituição + ${(exitTax * 100).toFixed(2).replace(".", ",")}% de ICMS na saída`;
+    `Sem crédito na entrada + ${(exitTax * 100).toFixed(2).replace(".", ",")}% de ICMS na saída`;
 
   $("kpiWithRestitution").textContent = formatCurrency(saleWith);
   $("kpiWithoutRestitution").textContent = formatCurrency(saleWithout);
@@ -271,14 +295,14 @@ function calculate() {
   $("insightDifference").textContent = formatCurrency(difference);
   if (mode === "net") {
     $("insightWith").textContent =
-      `Com custo efetivo de ${formatCurrency(effectiveCostWith)}, a venda necessária sobe para ${formatCurrency(saleWith)} para manter lucro líquido de ${formatPercent(margin)} sobre a venda.`;
+      `Com custo efetivo de ${formatCurrency(effectiveCostWith)}, a venda necessária sobe para ${formatCurrency(saleWith)} para manter lucro líquido de ${formatPercent(margin)} dentro da venda.`;
     $("insightWithout").textContent =
-      `Sem recuperação, a mesma margem líquida exige ${formatCurrency(saleWithout)} de venda.`;
+      `Sem crédito na entrada, a mesma margem líquida exige ${formatCurrency(saleWithout)} de venda.`;
   } else {
     $("insightWith").textContent =
-      `Com restituição, o custo efetivo cai para ${formatCurrency(effectiveCostWith)} e a venda necessária fica em ${formatCurrency(saleWith)}.`;
+      `Com crédito na entrada, o custo efetivo cai para ${formatCurrency(effectiveCostWith)} e a venda necessária fica em ${formatCurrency(saleWith)}.`;
     $("insightWithout").textContent =
-      `Sem restituição, a venda sobe para ${formatCurrency(saleWithout)} para manter ${formatPercent(margin)} sobre o custo.`;
+      `Sem crédito na entrada, a venda sobe para ${formatCurrency(saleWithout)} para manter ${formatPercent(margin)} sobre o custo.`;
   }
 
   renderChart(saleWith, saleWithout);

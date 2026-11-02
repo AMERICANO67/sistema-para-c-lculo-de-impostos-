@@ -223,6 +223,32 @@ select {
   line-height: 1.5;
 }
 
+.mode-warning {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid #ffd4b0;
+  background: #fff5eb;
+  color: #7a4319;
+}
+
+.mode-warning strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #a34700;
+}
+
+.mode-warning p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.is-hidden {
+  display: none;
+}
+
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

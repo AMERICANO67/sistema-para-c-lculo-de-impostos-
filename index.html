@@ -22,7 +22,7 @@
         <div class="brand-mark">DF</div>
         <div>
           <div class="brand-name">Dashboard de ICMS</div>
-          <div class="brand-sub">Simulação comparativa com restituição e sem restituição</div>
+          <div class="brand-sub">Simulação comparativa com crédito de entrada e sem crédito</div>
         </div>
       </div>
 
@@ -37,9 +37,9 @@
         <div class="section-title">
           <div>
             <span class="section-kicker">PARÂMETROS DA SIMULAÇÃO</span>
-            <h1>Cálculo de venda com <span>ICMS restituído</span> e sem restituição</h1>
+            <h1>Cálculo de venda com <span>crédito de ICMS</span> e sem crédito</h1>
             <p>
-              Informe o custo de compra, a margem desejada e as alíquotas para comparar os dois cenários.
+              Informe o custo de compra, a margem desejada e as alíquotas para comparar os dois cenários operacionais.
             </p>
           </div>
 
@@ -51,8 +51,8 @@
             <span>Tipo de cálculo</span>
             <div class="select-wrap">
               <select id="calcModeSelect">
-                <option value="markup" selected>Margem sobre custo</option>
-                <option value="net">Margem líquida sobre venda</option>
+                <option value="markup" selected>Margem comercial sobre custo (recomendada)</option>
+                <option value="net">Margem líquida dentro da venda</option>
               </select>
             </div>
           </label>
@@ -73,7 +73,7 @@
           </label>
 
           <label class="field">
-            <span>ICMS com restituição (%)</span>
+            <span id="entryTaxFieldLabel">ICMS de entrada recuperável (%)</span>
             <div class="input-wrap">
               <input id="restitutionTaxInput" type="number" min="0" max="100" step="0.01" value="18">
               <span>%</span>
@@ -92,16 +92,23 @@
         <p class="mode-helper" id="modeHelperText">
           Regra ativa: margem sobre custo. Exemplo: compra de R$ 100,00 com 60% gera R$ 160,00 após cobrir o ICMS na saída no cenário com restituição de 18%.
         </p>
+
+        <div class="mode-warning is-hidden" id="netModeWarning">
+          <strong id="netModeWarningTitle">Atenção para margem líquida dentro da venda</strong>
+          <p id="netModeWarningText">
+            Quando você escolhe margem líquida sobre a venda, o sistema precisa deixar esse lucro dentro do preço final depois do ICMS. Por isso o valor de venda sobe muito mais do que na margem sobre custo.
+          </p>
+        </div>
       </section>
 
       <section class="kpi-grid">
         <article class="kpi-card blue">
-          <span>Preço com restituição</span>
+          <span>Preço com crédito</span>
           <strong id="kpiWithRestitution">R$ 0,00</strong>
         </article>
 
         <article class="kpi-card orange">
-          <span>Preço sem restituição</span>
+          <span>Preço sem crédito</span>
           <strong id="kpiWithoutRestitution">R$ 0,00</strong>
         </article>
 
@@ -121,9 +128,9 @@
           <div class="scenario-header-bar blue">
             <div class="scenario-header-title">
               <span class="scenario-badge-icon">1</span>
-              <span>CENÁRIO 01 - COM RESTITUIÇÃO</span>
+              <span>CENÁRIO 01 - COM CRÉDITO DE ENTRADA</span>
             </div>
-            <span class="scenario-header-pill" id="pillScenario1">18% restituído + 18% de ICMS na saída</span>
+            <span class="scenario-header-pill" id="pillScenario1">18% de crédito na entrada + 18% de ICMS na saída</span>
           </div>
 
           <div class="scenario-body">
@@ -142,7 +149,7 @@
 
             <div class="metric-table">
               <div class="metric-row"><span>Compra</span><strong id="buyWithRestitution">R$ 0,00</strong></div>
-              <div class="metric-row"><span>Restituição estimada</span><strong id="restitutionValue">R$ 0,00</strong></div>
+              <div class="metric-row"><span>Crédito estimado</span><strong id="restitutionValue">R$ 0,00</strong></div>
               <div class="metric-row"><span>Custo efetivo</span><strong id="effectiveCost">R$ 0,00</strong></div>
               <div class="metric-row"><span>ICMS na saída</span><strong id="outputTaxWith">R$ 0,00</strong></div>
               <div class="metric-row"><span>ICMS líquido</span><strong id="taxDueWith">R$ 0,00</strong></div>
@@ -155,9 +162,9 @@
           <div class="scenario-header-bar red">
             <div class="scenario-header-title">
               <span class="scenario-badge-icon">2</span>
-              <span>CENÁRIO 02 - SEM RESTITUIÇÃO</span>
+              <span>CENÁRIO 02 - SEM CRÉDITO DE ENTRADA</span>
             </div>
-            <span class="scenario-header-pill" id="pillScenario2">Sem restituição + 18% de ICMS na saída</span>
+            <span class="scenario-header-pill" id="pillScenario2">Sem crédito na entrada + 18% de ICMS na saída</span>
           </div>
 
           <div class="scenario-body">
@@ -176,7 +183,7 @@
 
             <div class="metric-table">
               <div class="metric-row"><span>Compra</span><strong id="buyWithoutRestitution">R$ 0,00</strong></div>
-              <div class="metric-row"><span>Restituição</span><strong id="noRestitutionValue">R$ 0,00</strong></div>
+              <div class="metric-row"><span>Crédito</span><strong id="noRestitutionValue">R$ 0,00</strong></div>
               <div class="metric-row"><span>Custo efetivo</span><strong id="effectiveCostNoRestitution">R$ 0,00</strong></div>
               <div class="metric-row"><span>ICMS na saída</span><strong id="outputTaxWithout">R$ 0,00</strong></div>
               <div class="metric-row"><span>ICMS líquido</span><strong id="taxDueWithout">R$ 0,00</strong></div>
@@ -232,15 +239,15 @@
               </div>
 
               <div class="x-axis-labels-row">
-                <span>Com restituição</span>
-                <span>Sem restituição</span>
+                <span>Com crédito</span>
+                <span>Sem crédito</span>
               </div>
             </div>
           </div>
 
           <div class="chart-legend-bottom">
-            <span><i class="legend-circle blue"></i> Com restituição</span>
-            <span><i class="legend-circle orange"></i> Sem restituição</span>
+            <span><i class="legend-circle blue"></i> Com crédito</span>
+            <span><i class="legend-circle orange"></i> Sem crédito</span>
           </div>
         </article>
 
@@ -261,10 +268,10 @@
               <thead>
                 <tr>
                   <th>Margem</th>
-                  <th>Coef. c/ restituição</th>
-                  <th>Venda c/ restituição</th>
-                  <th>Coef. s/ restituição</th>
-                  <th>Venda s/ restituição</th>
+                  <th>Coef. c/ crédito</th>
+                  <th>Venda c/ crédito</th>
+                  <th>Coef. s/ crédito</th>
+                  <th>Venda s/ crédito</th>
                 </tr>
               </thead>
               <tbody id="referenceTable"></tbody>
@@ -287,23 +294,23 @@
 
           <ul class="insight-bullets">
             <li>
-              <strong>Com restituição:</strong>
+              <strong>Com crédito:</strong>
               <span id="insightWith">O custo efetivo reduz e o preço necessário cai.</span>
             </li>
             <li>
-              <strong>Sem restituição:</strong>
+              <strong>Sem crédito:</strong>
               <span id="insightWithout">O custo integral pressiona o preço de venda.</span>
             </li>
             <li>
-              <strong>Atenção:</strong>
-              <span>Esta simulação é operacional e deve ser validada com a contabilidade antes de uso fiscal.</span>
+              <strong>Regra recomendada:</strong>
+              <span id="taxRecommendation">Para operações internas em SP com tributação normal, a leitura mais segura para precificação comercial tende a ser a margem sobre custo com crédito de entrada.</span>
             </li>
           </ul>
         </article>
       </section>
 
       <section class="disclaimer">
-        <strong>Nota:</strong> esta versão considera a restituição como um percentual recuperável sobre o custo de compra, seguindo a lógica comparativa do modelo enviado. Se você quiser, no próximo passo eu adapto para a regra fiscal exata da sua operação.
+        <strong>Nota:</strong> para o cenário informado desta empresa, as operações internas em SP seguem tributação normal de ICMS, com crédito na entrada e débito na saída, fora do regime de ICMS-ST. Operações interestaduais ainda dependem de protocolo com o estado de destino e validação fiscal da contabilidade.
       </section>
     </main>
 
